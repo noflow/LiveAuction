@@ -1,0 +1,7 @@
+discord.py
+fastapi
+uvicorn
+gspread
+oauth2client
+python-dotenv
+aiohttp
