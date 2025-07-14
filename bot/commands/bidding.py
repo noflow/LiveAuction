@@ -1,9 +1,9 @@
 import discord 
 from discord import app_commands
 import time
-from bot.settings import get_setting
-from bot.core.auction_state import auction
-from bot.core.sheets import get_team_limits
+from settings import get_setting
+from core.auction_state import auction
+from core.sheets import get_team_limits
 
 @app_commands.command(name="minbid", description="Place the minimum bid on the active player")
 async def minbid(interaction: discord.Interaction):
