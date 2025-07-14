@@ -6,15 +6,15 @@ from discord.ext import commands
 from discord import app_commands
 from dotenv import load_dotenv
 
-from bot.settings import get_setting, update_setting
-from bot.core.auction_state import auction, AuctionState
-from bot.core.sheets import (
+from settings import get_setting, update_setting
+from core.auction_state import auction
+from core.sheets import (
     update_team_after_win,
     append_player_to_team_tab,
     remove_player_from_draft,
     get_team_limits,
 )
-from bot.commands import bidding, control, nominate
+from commands import bidding, control, nominate
 
 # ✅ Load environment variables
 load_dotenv()
