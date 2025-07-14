@@ -1,9 +1,9 @@
 from discord import app_commands
 import discord
 import time
-from bot.settings import get_setting
-from bot.core.auction_state import auction
-from bot.core.sheets import get_team_limits
+from settings import get_setting
+from core.auction_state import auction
+from core.sheets import get_team_limits
 @app_commands.command(name="matchbid", description="Match the current highest bid (nominator only)")
 async def matchbid(interaction: discord.Interaction):
     bid_amount = auction.highest_bid or 0
