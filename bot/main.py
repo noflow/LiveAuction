@@ -1,5 +1,4 @@
 import os
-import time
 import asyncio
 import discord
 from discord.ext import commands
@@ -50,10 +49,11 @@ bot = DraftBot()
 async def on_ready():
     print(f"🤖 Bot ready: {bot.user}")
 
+# Optional: log every interaction
 @bot.event
 async def on_interaction(interaction):
     print(f"👀 Interaction received: {interaction.data}")
 
-
 # ✅ Run the bot
 bot.run(TOKEN)
+
