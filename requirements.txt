@@ -5,3 +5,4 @@ gspread
 oauth2client
 python-dotenv
 aiohttp
+Flask==2.3.2
