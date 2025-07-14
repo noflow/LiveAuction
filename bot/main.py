@@ -1,6 +1,7 @@
 import os
 import asyncio
 import discord
+import threading
 from discord.ext import commands
 from discord import app_commands
 from dotenv import load_dotenv
@@ -14,6 +15,13 @@ from core.sheets import (
     get_team_limits,
 )
 from commands import bidding, control, nominate
+from http_api import start_flask_server
+
+# start Flask in background
+threading.Thread(target=start_flask_server, daemon=True).start()
+
+# existing bot logic continues here...
+
 
 # ✅ Load environment variables
 load_dotenv()
