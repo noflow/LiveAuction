@@ -1,10 +1,10 @@
 from discord import app_commands
 import discord
 import time
-from bot.settings import get_setting
-from bot.core.sheets import get_team_limits
-from bot.core.auction_state import auction, auction_countdown
-from bot.commands.bidding import check_auto_bidders  # Import this function
+from settings import get_setting
+from core.sheets import get_team_limits
+from core.auction_state import auction, auction_countdown
+from commands.bidding import check_auto_bidders  # Import this function
 import asyncio
 
 
