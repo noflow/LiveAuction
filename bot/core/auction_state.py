@@ -1,6 +1,6 @@
 import time
 import asyncio
-from bot.core.sheets import (
+from core.sheets import (
     update_team_after_win,
     append_player_to_team_tab,
     remove_player_from_draft
