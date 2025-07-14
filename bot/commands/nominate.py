@@ -38,6 +38,20 @@ async def nominate(interaction: discord.Interaction, player: str):
     # Trigger auto bidders
     await check_auto_bidders()
 
+# At the bottom of bot/commands/nominate.py
+
+async def handle_nomination_from_backend(data):
+    class DummyUser:
+        def __init__(self, id, username):
+            self.id = id
+            self.display_name = username
+            self.mention = f"<@{id}>"
+
+    dummy_user = DummyUser(data["userId"], data["username"])
+    result = await handle_nomination(dummy_user, None, data["player"])
+    return result
+
+
 
 async def setup(bot):
     bot.tree.add_command(nominate)
