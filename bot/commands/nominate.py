@@ -40,16 +40,62 @@ async def nominate(interaction: discord.Interaction, player: str):
 
 # At the bottom of bot/commands/nominate.py
 
+
 async def handle_nomination_from_backend(data):
+    from core.auction_state import auction, auction_countdown
+    from core.sheets import get_team_limits
+    from core.settings import get_setting
+    from commands.bidding import check_auto_bidders
+
     class DummyUser:
         def __init__(self, id, username):
             self.id = id
             self.display_name = username
             self.mention = f"<@{id}>"
 
-    dummy_user = DummyUser(data["userId"], data["username"])
-    result = await handle_nomination(dummy_user, None, data["player"])
-    return result
+    user = DummyUser(data["userId"], data["username"])
+    player = data["player"]
+
+    if auction.paused:
+        return { "status": "error", "message": "Draft is currently paused." }
+
+    if auction.active_player:
+        return { "status": "error", "message": "A player is already up for bidding." }
+
+    if not auction.nominator or auction.nominator.id != user.id:
+        return { "status": "error", "message": "It's not your turn to nominate." }
+
+    limits = get_team_limits(user.id)
+    if not limits:
+        return { "status": "error", "message": "Could not locate your team data." }
+
+    if limits["remaining"] < get_setting("nominationCost"):
+        return { "status": "error", "message": "Not enough cap space to nominate." }
+
+    if limits["roster_count"] >= get_setting("maxRosterSize"):
+        return { "status": "error", "message": "Roster is already full." }
+
+    # All checks passed — nominate
+    auction.active_player = player
+    auction.highest_bidder = user
+    auction.nominator = user
+    auction.highest_bid = get_setting("nominationCost")
+    auction.reset_timer()
+
+    if auction.timer_task:
+        auction.timer_task.cancel()
+    auction.timer_task = asyncio.create_task(auction_countdown())
+
+    await check_auto_bidders()
+
+    # Move nominator to end of queue
+    auction.advance_nomination_queue()
+
+    return {
+        "status": "success",
+        "player": player,
+        "message": f"✅ {player} nominated by {user.display_name}. Bidding starts at ${auction.highest_bid}"
+    }
 
 
 
