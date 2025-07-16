@@ -19,6 +19,27 @@ def nominate():
 # def bid():
 #     ...
 
+
+@app.route("/auction/state", methods=["GET"])
+def get_auction_state():
+    from core.auction_state import auction
+    import time
+
+    return jsonify({
+        "active": auction.active_player is not None,
+        "player": auction.active_player,
+        "high_bid": auction.highest_bid,
+        "high_bidder": getattr(auction.highest_bidder, "display_name", "???") if auction.highest_bidder else None,
+        "time_remaining": max(0, int(auction.ends_at - time.time())) if auction.ends_at else 0,
+        "currentNominator": {
+            "userId": getattr(auction.nominator, "id", None),
+            "teamId": getattr(auction.nominator, "id", None),
+            "displayName": getattr(auction.nominator, "display_name", "???"),
+            "team": "Your Team Name"
+        } if auction.nominator else None
+    })
+
+
 def start_flask_server():
     app.run(host="0.0.0.0", port=5050)
 
