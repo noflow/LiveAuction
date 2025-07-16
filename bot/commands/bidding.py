@@ -117,3 +117,36 @@ async def setup(bot):
     bot.tree.add_command(minbid)
     bot.tree.add_command(flashbid)
     bot.tree.add_command(autobid)
+
+
+async def handle_bid_from_backend(data):
+    user_id = data["userId"]
+    amount = data["amount"]
+
+    # Dummy logic - replace with real auction state handling
+    from core.auction_state import auction
+    from core.permissions import get_team_limits
+    from core.settings import get_setting
+
+    user_limits = get_team_limits(user_id)
+    if not user_limits:
+        return {"status": "error", "message": "Unauthorized bidder"}
+
+    if amount <= auction.highest_bid:
+        return {"status": "error", "message": "Bid too low"}
+
+    if user_limits["remaining"] < amount:
+        return {"status": "error", "message": "Insufficient funds"}
+
+    if user_limits["roster_count"] >= get_setting("maxRosterSize"):
+        return {"status": "error", "message": "Roster full"}
+
+    auction.highest_bid = amount
+    auction.highest_bidder = user_id
+    auction.reset_timer()
+
+    return {
+        "status": "success",
+        "highBid": amount,
+        "highBidder": user_id
+    }
