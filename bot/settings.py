@@ -2,6 +2,10 @@
 
 # In-memory settings store (can be enhanced with persistence later)
 settings_data = {
+    # 🌐 Service URLs
+    "bot_base_url": "https://bot.wcahockey.com",
+    "api_base_url": "https://api.wcahockey.com",
+
     # 💵 Auction Behavior
     "minimum_bid_amount": 1,
     "bid_timer_seconds": 10,

@@ -4,8 +4,6 @@ from commands.nominate import handle_nomination_from_backend
 # from commands.bidding import handle_bid_from_backend  # example
 
 app = Flask(__name__)
-from flask_cors import CORS
-CORS(app, origins=["https://wcahockey.com", "https://api.wcahockey.com"])
 
 @app.route("/nominate", methods=["POST"])
 def nominate():
