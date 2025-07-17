@@ -14,10 +14,6 @@ DISCORD_REDIRECT_URI = os.getenv("DISCORD_REDIRECT_URI")
 def start_flask_server():
     app.run(host="0.0.0.0", port=5050)
 
-@app.route("/health", methods=["GET"])
-def health():
-    return "OK", 200
-
 @app.route("/auth/discord")
 def auth_discord():
     scope = "identify guilds"
@@ -125,8 +121,13 @@ def get_auction_state():
         from core.sheets import get_team_limits
 
         nominator = auction.nominator
-        team_info = get_team_limits(nominator.id) if nominator else None
-        team_name = team_info["team"] if team_info else "Unknown"
+        try:
+            from core.sheets import get_team_limits
+            team_info = get_team_limits(nominator.id) if nominator else None
+            team_name = team_info["team"] if team_info else "Unknown"
+        except Exception as sheet_error:
+            print("[WARN] Sheet access failed:", sheet_error)
+            team_name = "Unknown"
 
         return jsonify({
             "active": auction.active_player is not None,
@@ -150,5 +151,9 @@ def get_auction_state():
             "message": str(e)
         }), 500
 
+
+@app.route("/health", methods=["GET"])
+def health():
+    return "OK", 200
 
 
