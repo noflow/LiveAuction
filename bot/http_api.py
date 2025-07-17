@@ -144,5 +144,8 @@ def get_auction_state():
             "message": str(e)
         }), 500
 
+@app.route("/health", methods=["GET"])
+def health():
+    return "OK", 200
 
 
