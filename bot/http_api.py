@@ -11,6 +11,9 @@ DISCORD_CLIENT_ID = os.getenv("DISCORD_CLIENT_ID")
 DISCORD_CLIENT_SECRET = os.getenv("DISCORD_CLIENT_SECRET")
 DISCORD_REDIRECT_URI = os.getenv("DISCORD_REDIRECT_URI")
 
+def start_flask_server():
+    app.run(host="0.0.0.0", port=5050)
+
 @app.route("/auth/discord")
 def auth_discord():
     scope = "identify guilds"
@@ -131,7 +134,5 @@ def get_auction_state():
         } if nominator else None
     })
 
-def start_flask_server():
-    port = int(os.environ.get("PORT", 5050))
-    app.run(host="0.0.0.0", port=port)
+
 
