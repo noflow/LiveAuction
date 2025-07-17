@@ -111,12 +111,14 @@ def toggle_pause():
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
+import time
+from flask import jsonify
+
 @app.route("/auction/state", methods=["GET"])
 def get_auction_state():
     try:
         from core.auction_state import auction
         from core.sheets import get_team_limits
-        import time
 
         nominator = auction.nominator
         team_info = get_team_limits(nominator.id) if nominator else None
@@ -138,11 +140,12 @@ def get_auction_state():
 
     except Exception as e:
         import traceback
-        print("[ERROR] /auction/state failed:\n", traceback.format_exc())
+        print("[/auction/state ERROR]", traceback.format_exc())
         return jsonify({
-            "error": "Internal server error",
+            "error": "Something went wrong in /auction/state.",
             "message": str(e)
         }), 500
+
 
 @app.route("/health", methods=["GET"])
 def health():
