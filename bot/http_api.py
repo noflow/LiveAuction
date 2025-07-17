@@ -116,6 +116,7 @@ def get_auction_state():
     try:
         from core.auction_state import auction
         from core.sheets import get_team_limits
+        import time
 
         nominator = auction.nominator
         team_info = get_team_limits(nominator.id) if nominator else None
@@ -136,7 +137,12 @@ def get_auction_state():
         })
 
     except Exception as e:
-        print(f"[ERROR] /auction/state failed: {e}")
-        return jsonify({ "error": "Internal server error", "details": str(e) }), 500
+        import traceback
+        print("[ERROR] /auction/state failed:\n", traceback.format_exc())
+        return jsonify({
+            "error": "Internal server error",
+            "message": str(e)
+        }), 500
+
 
 
