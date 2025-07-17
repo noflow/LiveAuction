@@ -111,37 +111,32 @@ def toggle_pause():
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
-#@app.route("/auction/state", methods=["GET"])
-#def get_auction_state():
-    #from core.auction_state import auction
-    #from core.sheets import get_team_limits
-
-    #nominator = auction.nominator
-    #team_info = get_team_limits(nominator.id) if nominator else None
-    #team_name = team_info["team"] if team_info else "Unknown"
-
-    #return jsonify({
-        #"active": auction.active_player is not None,
-        #"player": auction.active_player,
-        #"high_bid": auction.highest_bid,
-        #"high_bidder": getattr(auction.highest_bidder, "display_name", "???") if auction.highest_bidder else None,
-        #"time_remaining": max(0, int(auction.ends_at - time.time())) if auction.ends_at else 0,
-        #"currentNominator": {
-            #"userId": getattr(nominator, "id", None),
-            #"teamId": getattr(nominator, "id", None),
-            #"displayName": getattr(nominator, "display_name", "???"),
-            #"team": team_name
-        #} if nominator else None
-    #})
 @app.route("/auction/state", methods=["GET"])
-def test_state():
-    return {
-        "active": False,
-        "player": None,
-        "highest_bid": 0,
-        "high_bidder": None,
-        "time_remaining": 0,
-        "currentNominator": None
-    }
+def get_auction_state():
+    try:
+        from core.auction_state import auction
+        from core.sheets import get_team_limits
+
+        nominator = auction.nominator
+        team_info = get_team_limits(nominator.id) if nominator else None
+        team_name = team_info["team"] if team_info else "Unknown"
+
+        return jsonify({
+            "active": auction.active_player is not None,
+            "player": auction.active_player,
+            "high_bid": auction.highest_bid,
+            "high_bidder": getattr(auction.highest_bidder, "display_name", "???") if auction.highest_bidder else None,
+            "time_remaining": max(0, int(auction.ends_at - time.time())) if auction.ends_at else 0,
+            "currentNominator": {
+                "userId": getattr(nominator, "id", None),
+                "teamId": getattr(nominator, "id", None),
+                "displayName": getattr(nominator, "display_name", "???"),
+                "team": team_name
+            } if nominator else None
+        })
+
+    except Exception as e:
+        print(f"[ERROR] /auction/state failed: {e}")
+        return jsonify({ "error": "Internal server error", "details": str(e) }), 500
 
 
