@@ -133,6 +133,15 @@ def get_auction_state():
             "team": team_name
         } if nominator else None
     })
-
+@app.route("/auction/state", methods=["GET"])
+def test_state():
+    return {
+        "active": False,
+        "player": None,
+        "highest_bid": 0,
+        "high_bidder": None,
+        "time_remaining": 0,
+        "currentNominator": None
+    }
 
 
