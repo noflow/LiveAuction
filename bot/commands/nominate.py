@@ -101,7 +101,6 @@ async def handle_nomination_from_backend(data):
 
 async def setup(bot):
     bot.tree.add_command(nominate)
-    limits = get_team_limits(user_id)
     min_roster = get_setting("min_roster_size")
     min_bid = get_setting("minimum_bid_amount")
 
