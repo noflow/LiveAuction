@@ -6,6 +6,7 @@ from core.socketio_instance import socketio
 
 
 app = Flask(__name__)
+socketio.init_app(app, cors_allowed_origins="*")  # ✅ This line is critical
 CORS(app)
 app.secret_key = os.getenv("SESSION_SECRET", "defaultsecret")
 
