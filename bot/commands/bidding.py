@@ -5,6 +5,8 @@ from settings import get_setting
 from core.auction_state import auction
 from core.sheets import get_team_limits
 
+LOG_CHANNEL_ID = 999999999999999999  # Replace with real channel ID
+
 @app_commands.command(name="minbid", description="Place the minimum bid on the active player")
 async def minbid(interaction: discord.Interaction):
     bid_amount = 1
@@ -33,16 +35,23 @@ async def minbid(interaction: discord.Interaction):
     auction.highest_bid += 1
     auction.highest_bidder = interaction.user
 
-    if time.time() > auction.ends_at - 10:
-        auction.reset_timer()
-        await auction.channel.send("🔁 Bid placed with <10s left — timer reset to 10 seconds!")
-
     auction.bid_history.append({
         "player": auction.active_player,
         "amount": auction.highest_bid,
         "bidder": interaction.user.display_name,
         "timestamp": time.time()
     })
+
+    team_info = get_team_limits(interaction.user.id)
+    team_name = team_info["team"] if team_info else "Unknown Team"
+
+    log_channel = interaction.guild.get_channel(LOG_CHANNEL_ID)
+    if log_channel:
+        await log_channel.send(f"💰 **Team {team_name}** bid **${auction.highest_bid}** on **{auction.active_player}**")
+
+    if time.time() > auction.ends_at - 10:
+        auction.reset_timer()
+        await auction.channel.send("🔁 Bid placed with <10s left — timer reset to 10 seconds!")
 
     await auction.channel.send(
         f"💰 {interaction.user.mention} has bid **${auction.highest_bid}** on **{auction.active_player}**!"
@@ -84,16 +93,23 @@ async def flashbid(interaction: discord.Interaction, amount: int):
     auction.highest_bid = amount
     auction.highest_bidder = interaction.user
 
-    if time.time() > auction.ends_at - 10:
-        auction.reset_timer()
-        await auction.channel.send("🔁 Flash bid placed with <10s left — timer reset to 10 seconds!")
-
     auction.bid_history.append({
         "player": auction.active_player,
         "amount": auction.highest_bid,
         "bidder": interaction.user.display_name,
         "timestamp": time.time()
     })
+
+    team_info = get_team_limits(interaction.user.id)
+    team_name = team_info["team"] if team_info else "Unknown Team"
+
+    log_channel = interaction.guild.get_channel(LOG_CHANNEL_ID)
+    if log_channel:
+        await log_channel.send(f"💰 **Team {team_name}** bid **${auction.highest_bid}** on **{auction.active_player}**")
+
+    if time.time() > auction.ends_at - 10:
+        auction.reset_timer()
+        await auction.channel.send("🔁 Flash bid placed with <10s left — timer reset to 10 seconds!")
 
     await auction.channel.send(
         f"⚡ {interaction.user.mention} flash bid **${amount}** on **{auction.active_player}**!"
@@ -120,14 +136,6 @@ async def check_auto_bidders():
         auction.highest_bid += 1
         auction.highest_bidder = auction.channel.guild.get_member(user_id)
         auction.reset_timer()
-
-        auction.bid_history.append({
-            "player": auction.active_player,
-            "amount": auction.highest_bid,
-            "bidder": f"<@{user_id}> (auto)",
-            "timestamp": time.time()
-        })
-
         await auction.channel.send(
             f"🤖 Auto-bid by <@{user_id}> to **${auction.highest_bid}**!"
         )
