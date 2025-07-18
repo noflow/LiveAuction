@@ -170,11 +170,7 @@ def get_roles():
 
     return jsonify(roles)
 
-@app.route("/draft-list", methods=["GET"])
-def get_draft_list():
-    try:
-        from core.sheets import load_draft_list
-        players = load_draft_list()
-        return jsonify(players)
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+@app.route("/auction/history", methods=["GET"])
+def get_bid_history():
+    from core.auction_state import auction
+    return jsonify(auction.bid_history[-50:])
