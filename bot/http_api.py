@@ -2,6 +2,8 @@ from flask import Flask, request, jsonify, redirect, session
 import asyncio, os, time, requests
 from flask_cors import CORS
 from commands.nominate import handle_nomination_from_backend
+from core.socketio_instance import socketio
+
 
 app = Flask(__name__)
 CORS(app)
