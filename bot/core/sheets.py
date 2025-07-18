@@ -94,25 +94,29 @@ def get_team_limits(discord_id):
 
 
 
-def load_nomination_order():
+def load_draft_list():
     scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
     creds = ServiceAccountCredentials.from_json_keyfile_name("google_credentials.json", scope)
     client = gspread.authorize(creds)
     sheet = client.open_by_key("1QeLyKIgTSYFkLUqPcUrKyJBqTIo8WZoL-BI6tmqWcHk")
-    worksheet = sheet.worksheet("Team List")
+    worksheet = sheet.worksheet("Draft List")
     rows = worksheet.get_all_records()
 
-    teams = []
+    players = []
     for row in rows:
-        team_name = row.get("Team Name", "").strip()
-        owner_id = row.get("Owner Discord ID", "").strip()
-        gm_id = row.get("GM Discord ID", "").strip()
-        if not team_name:
+        name = row.get("PSN / XBL ID", "").strip()
+        main = row.get("Main Position", "").strip()
+        other = row.get("Other Positions", "").strip()
+        hand = row.get("Hand", "").strip()
+
+        if not name:
             continue
-        teams.append({
-            "team_name": team_name,
-            "owner_id": owner_id,
-            "gm_id": gm_id
+
+        position = f"{main}/{other}" if other else main
+        players.append({
+            "id": name,
+            "position": position,
+            "hand": hand
         })
 
-    return teams
+    return players
