@@ -16,12 +16,14 @@ from core.sheets import (
 )
 from commands import bidding, control, nominate
 from http_api import start_flask_server
+from core.socketio_instance import socketio
+from http_api import app
 
-# start Flask in background
-threading.Thread(target=start_flask_server, daemon=True).start()
+def run_flask_socket():
+    socketio.run(app, host="0.0.0.0", port=5050)
 
-# existing bot logic continues here...
-
+# start Flask+SocketIO in background
+threading.Thread(target=run_flask_socket, daemon=True).start()
 
 # ✅ Load environment variables
 load_dotenv()
@@ -64,4 +66,3 @@ async def on_interaction(interaction):
 
 # ✅ Run the bot
 bot.run(TOKEN)
-
