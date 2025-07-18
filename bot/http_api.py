@@ -6,6 +6,7 @@ from core.socketio_instance import socketio
 
 
 app = Flask(__name__)
+socketio.init_app(app, cors_allowed_origins="*")
 CORS(app)
 app.secret_key = os.getenv("SESSION_SECRET", "defaultsecret")
 
@@ -194,6 +195,11 @@ def send_team_update(discord_id, sid):
     if not team_data:
         print(f"[team:update] No matching team for Discord ID {discord_id}")
         return
+
+    team_data["isGMOrOwner"] = True
+    socketio.emit("team:update", team_data, room=sid)
+    print(f"[team:update] Sent to {discord_id} (SID: {sid}) → {team_data['teamName']}")
+
 
     team_data["isGMOrOwner"] = True
     socketio.emit("team:update", team_data, room=sid)
