@@ -176,3 +176,14 @@ def get_roles():
 def get_bid_history():
     from core.auction_state import auction
     return jsonify(auction.bid_history[-50:])
+
+@app.route("/api/admin/start-draft", methods=["POST"])
+def start_draft_proxy():
+    try:
+        res = requests.post("http://bot.wcahockey.com/startdraft")  # 🔁 adjust URL if needed
+        if res.status_code != 200:
+            return jsonify({"error": "Bot did not respond properly"}), 500
+        return jsonify({"status": "started"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
