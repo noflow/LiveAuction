@@ -169,3 +169,12 @@ def get_roles():
     roles = get_user_roles(user_id)
 
     return jsonify(roles)
+
+@app.route("/draft-list", methods=["GET"])
+def get_draft_list():
+    try:
+        from core.sheets import load_draft_list
+        players = load_draft_list()
+        return jsonify(players)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
