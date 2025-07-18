@@ -1,15 +1,16 @@
+
 import discord 
 from discord import app_commands
 import time
 from settings import get_setting
 from core.auction_state import auction
-from core.sheets import get_team_limits
+from core.sheets import get_team_limits, get_team_roster
+from core.socket import socketio
 
 LOG_CHANNEL_ID = 999999999999999999  # Replace with real channel ID
 
 @app_commands.command(name="minbid", description="Place the minimum bid on the active player")
 async def minbid(interaction: discord.Interaction):
-    bid_amount = 1
     user_limits = get_team_limits(interaction.user.id)
 
     if not user_limits:
@@ -57,13 +58,14 @@ async def minbid(interaction: discord.Interaction):
         f"💰 {interaction.user.mention} has bid **${auction.highest_bid}** on **{auction.active_player}**!"
     )
     await interaction.response.send_message("✅ Your bid has been placed.", ephemeral=True)
+
+    await emit_team_update(interaction.user.id)
     await check_auto_bidders()
 
 
 @app_commands.command(name="flashbid", description="Place a custom amount bid")
 @app_commands.describe(amount="Your custom bid amount")
 async def flashbid(interaction: discord.Interaction, amount: int):
-    bid_amount = amount
     user_limits = get_team_limits(interaction.user.id)
 
     if not user_limits:
@@ -74,7 +76,7 @@ async def flashbid(interaction: discord.Interaction, amount: int):
         await interaction.response.send_message("🚫 You’ve reached the max roster size.", ephemeral=True)
         return
 
-    if user_limits['remaining'] < bid_amount:
+    if user_limits['remaining'] < amount:
         await interaction.response.send_message("💰 You don’t have enough cap space to place this bid.", ephemeral=True)
         return
 
@@ -115,6 +117,8 @@ async def flashbid(interaction: discord.Interaction, amount: int):
         f"⚡ {interaction.user.mention} flash bid **${amount}** on **{auction.active_player}**!"
     )
     await interaction.response.send_message("✅ Flash bid placed.", ephemeral=True)
+
+    await emit_team_update(interaction.user.id)
     await check_auto_bidders()
 
 
@@ -124,6 +128,21 @@ async def autobid(interaction: discord.Interaction, max_bid: int):
     user_id = interaction.user.id
     auction.auto_bidders[user_id] = max_bid
     await interaction.response.send_message(f"✅ Auto-bid set up to **${max_bid}** for this player.", ephemeral=True)
+
+
+async def emit_team_update(user_id):
+    limits = get_team_limits(user_id)
+    if not limits:
+        return
+    players = get_team_roster(limits["team"])
+    socketio.emit("team:update", {
+        "teamName": limits["team"],
+        "salaryRemaining": limits["remaining"],
+        "rosterCount": limits["roster_count"],
+        "maxRoster": get_setting("max_roster_size"),
+        "players": [{"name": p["name"], "cost": p["amount"]} for p in players],
+        "isGMOrOwner": True
+    })
 
 
 async def check_auto_bidders():
