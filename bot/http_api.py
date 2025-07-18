@@ -157,3 +157,15 @@ def health():
     return "OK", 200
 
 
+
+
+@app.route("/roles", methods=["GET"])
+def get_roles():
+    if "discord_id" not in session:
+        return jsonify({"error": "Not logged in"}), 401
+
+    from core.permissions import get_user_roles
+    user_id = session["discord_id"]
+    roles = get_user_roles(user_id)
+
+    return jsonify(roles)
