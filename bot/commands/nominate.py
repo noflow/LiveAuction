@@ -101,18 +101,3 @@ async def handle_nomination_from_backend(data):
 
 async def setup(bot):
     bot.tree.add_command(nominate)
-    limits = get_team_limits(user_id)
-    min_roster = get_setting("min_roster_size")
-    min_bid = get_setting("minimum_bid_amount")
-
-    remaining_spots = max(min_roster - limits["roster_count"], 0)
-    min_required_cap = remaining_spots * min_bid
-
-    if limits["remaining"] - get_setting("nomination_cost") < min_required_cap:
-        await interaction.response.send_message(
-            f"💰 You must reserve enough cap to fill at least {min_roster} players. "
-            f"You need at least ${min_required_cap} remaining for {remaining_spots} roster spots.",
-            ephemeral=True
-        )
-        return
-    
