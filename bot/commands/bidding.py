@@ -32,16 +32,17 @@ async def minbid(interaction: discord.Interaction):
 
     auction.highest_bid += 1
     auction.highest_bidder = interaction.user
-auction.bid_history.append({
+
+    if time.time() > auction.ends_at - 10:
+        auction.reset_timer()
+        await auction.channel.send("🔁 Bid placed with <10s left — timer reset to 10 seconds!")
+
+    auction.bid_history.append({
         "player": auction.active_player,
         "amount": auction.highest_bid,
         "bidder": interaction.user.display_name,
         "timestamp": time.time()
     })
-
-    if time.time() > auction.ends_at - 10:
-        auction.reset_timer()
-        await auction.channel.send("🔁 Bid placed with <10s left — timer reset to 10 seconds!")
 
     await auction.channel.send(
         f"💰 {interaction.user.mention} has bid **${auction.highest_bid}** on **{auction.active_player}**!"
@@ -82,16 +83,17 @@ async def flashbid(interaction: discord.Interaction, amount: int):
 
     auction.highest_bid = amount
     auction.highest_bidder = interaction.user
-auction.bid_history.append({
+
+    if time.time() > auction.ends_at - 10:
+        auction.reset_timer()
+        await auction.channel.send("🔁 Flash bid placed with <10s left — timer reset to 10 seconds!")
+
+    auction.bid_history.append({
         "player": auction.active_player,
         "amount": auction.highest_bid,
         "bidder": interaction.user.display_name,
         "timestamp": time.time()
     })
-
-    if time.time() > auction.ends_at - 10:
-        auction.reset_timer()
-        await auction.channel.send("🔁 Flash bid placed with <10s left — timer reset to 10 seconds!")
 
     await auction.channel.send(
         f"⚡ {interaction.user.mention} flash bid **${amount}** on **{auction.active_player}**!"
@@ -118,47 +120,21 @@ async def check_auto_bidders():
         auction.highest_bid += 1
         auction.highest_bidder = auction.channel.guild.get_member(user_id)
         auction.reset_timer()
+
+        auction.bid_history.append({
+            "player": auction.active_player,
+            "amount": auction.highest_bid,
+            "bidder": f"<@{user_id}> (auto)",
+            "timestamp": time.time()
+        })
+
         await auction.channel.send(
             f"🤖 Auto-bid by <@{user_id}> to **${auction.highest_bid}**!"
         )
         break
 
 
-# Register all commands in this file
 async def setup(bot):
     bot.tree.add_command(minbid)
     bot.tree.add_command(flashbid)
     bot.tree.add_command(autobid)
-
-
-async def handle_bid_from_backend(data):
-    user_id = data["userId"]
-    amount = data["amount"]
-
-    # Dummy logic - replace with real auction state handling
-    from core.auction_state import auction
-    from core.permissions import get_team_limits
-    from core.settings import get_setting
-
-    user_limits = get_team_limits(user_id)
-    if not user_limits:
-        return {"status": "error", "message": "Unauthorized bidder"}
-
-    if amount <= auction.highest_bid:
-        return {"status": "error", "message": "Bid too low"}
-
-    if user_limits["remaining"] < amount:
-        return {"status": "error", "message": "Insufficient funds"}
-
-    if user_limits["roster_count"] >= get_setting("maxRosterSize"):
-        return {"status": "error", "message": "Roster full"}
-
-    auction.highest_bid = amount
-    auction.highest_bidder = user_id
-    auction.reset_timer()
-
-    return {
-        "status": "success",
-        "highBid": amount,
-        "highBidder": user_id
-    }
