@@ -1,5 +1,33 @@
+
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
+
+def get_team_limits(discord_id):
+    try:
+        scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
+        creds_path = "google_credentials.json"
+        creds = ServiceAccountCredentials.from_json_keyfile_name(creds_path, scope)
+        client = gspread.authorize(creds)
+        sheet = client.open_by_key("1QeLyKIgTSYFkLUqPcUrKyJBqTIo8WZoL-BI6tmqWcHk")
+        settings = sheet.worksheet("Settings")
+        records = settings.get_all_records()
+
+        for row in records:
+            if str(row.get("Owner Discord ID")) == str(discord_id) or str(row.get("GM Discord ID")) == str(discord_id):
+                salary = float(row.get("Salary", 0))
+                used = float(row.get("Salary Used", 0))
+                roster = int(row.get("Roster Count", 0))
+                return {
+                    "team": row.get("Team Name"),
+                    "salary": salary,
+                    "salary_used": used,
+                    "roster_count": roster,
+                    "remaining": salary - used
+                }
+        return None
+    except Exception as e:
+        print(f"[Error] Google Sheets access failed: {e}")
+        return None
 
 def update_team_after_win(discord_id, bid_amount):
     try:
@@ -62,37 +90,28 @@ def remove_player_from_draft(player_name):
     except Exception as e:
         print(f"[Error] remove_player_from_draft: {e}")
 
-# === Google Sheets Setup ===
+def load_nomination_order():
+    scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
+    creds = ServiceAccountCredentials.from_json_keyfile_name("google_credentials.json", scope)
+    client = gspread.authorize(creds)
+    sheet = client.open_by_key("1QeLyKIgTSYFkLUqPcUrKyJBqTIo8WZoL-BI6tmqWcHk")
+    worksheet = sheet.worksheet("Team List")
+    rows = worksheet.get_all_records()
 
+    teams = []
+    for row in rows:
+        team_name = row.get("Team Name", "").strip()
+        owner_id = row.get("Owner Discord ID", "").strip()
+        gm_id = row.get("GM Discord ID", "").strip()
+        if not team_name:
+            continue
+        teams.append({
+            "team_name": team_name,
+            "owner_id": owner_id,
+            "gm_id": gm_id
+        })
 
-def get_team_limits(discord_id):
-    try:
-        scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
-        creds_path = "google_credentials.json"
-        creds = ServiceAccountCredentials.from_json_keyfile_name(creds_path, scope)
-        client = gspread.authorize(creds)
-        sheet = client.open_by_key("1QeLyKIgTSYFkLUqPcUrKyJBqTIo8WZoL-BI6tmqWcHk")
-        settings = sheet.worksheet("Settings")
-        records = settings.get_all_records()
-
-        for row in records:
-            if str(row.get("Owner Discord ID")) == str(discord_id) or str(row.get("GM Discord ID")) == str(discord_id):
-                salary = float(row.get("Salary", 0))
-                used = float(row.get("Salary Used", 0))
-                roster = int(row.get("Roster Count", 0))
-                return {
-                    "team": row.get("Team Name"),
-                    "salary": salary,
-                    "salary_used": used,
-                    "roster_count": roster,
-                    "remaining": salary - used
-                }
-        return None
-    except Exception as e:
-        print(f"[Error] Google Sheets access failed: {e}")
-        return None
-
-
+    return teams
 
 def load_draft_list():
     scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
