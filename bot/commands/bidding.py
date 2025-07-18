@@ -1,13 +1,11 @@
-
 import discord 
 from discord import app_commands
 import time
 from settings import get_setting
 from core.auction_state import auction
 from core.sheets import get_team_limits, get_team_roster
-from core.socket import socketio
 from core.socketio_instance import socketio
-
+from commands.autobid_utils import check_auto_bidders  # ✅ avoids circular import
 
 LOG_CHANNEL_ID = 999999999999999999  # Replace with real channel ID
 
@@ -147,23 +145,8 @@ async def emit_team_update(user_id):
     })
 
 
-async def check_auto_bidders():
-    for user_id, max_bid in auction.auto_bidders.items():
-        if auction.highest_bid >= max_bid:
-            continue
-        if user_id == auction.highest_bidder.id:
-            continue
-
-        auction.highest_bid += 1
-        auction.highest_bidder = auction.channel.guild.get_member(user_id)
-        auction.reset_timer()
-        await auction.channel.send(
-            f"🤖 Auto-bid by <@{user_id}> to **${auction.highest_bid}**!"
-        )
-        break
-
-
 async def setup(bot):
     bot.tree.add_command(minbid)
     bot.tree.add_command(flashbid)
     bot.tree.add_command(autobid)
+
