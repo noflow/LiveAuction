@@ -18,20 +18,7 @@ async def minbid(interaction: discord.Interaction):
         await interaction.response.send_message("🚫 You’ve reached the max roster size.", ephemeral=True)
         return
 
-    
-    remaining_spots = max(get_setting("min_roster_size") - user_limits["roster_count"], 0)
-    min_required_cap = remaining_spots * get_setting("minimum_bid_amount")
-
-    if user_limits["remaining"] - bid_amount < min_required_cap:
-        await interaction.response.send_message(
-            f"💸 You must keep enough cap space to reach the minimum roster of {get_setting('min_roster_size')} players. "
-            f"You need ${min_required_cap} reserved.",
-            ephemeral=True
-        )
-        return
-
     if user_limits['remaining'] < get_setting("minimum_bid_amount"):
-        
         await interaction.response.send_message("💰 You don’t have enough cap space to place this bid.", ephemeral=True)
         return
 
@@ -45,6 +32,12 @@ async def minbid(interaction: discord.Interaction):
 
     auction.highest_bid += 1
     auction.highest_bidder = interaction.user
+auction.bid_history.append({
+        "player": auction.active_player,
+        "amount": auction.highest_bid,
+        "bidder": interaction.user.display_name,
+        "timestamp": time.time()
+    })
 
     if time.time() > auction.ends_at - 10:
         auction.reset_timer()
@@ -89,6 +82,12 @@ async def flashbid(interaction: discord.Interaction, amount: int):
 
     auction.highest_bid = amount
     auction.highest_bidder = interaction.user
+auction.bid_history.append({
+        "player": auction.active_player,
+        "amount": auction.highest_bid,
+        "bidder": interaction.user.display_name,
+        "timestamp": time.time()
+    })
 
     if time.time() > auction.ends_at - 10:
         auction.reset_timer()
