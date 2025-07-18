@@ -2,6 +2,8 @@ from discord import app_commands
 import discord
 import time
 from settings import get_setting
+from collections import deque
+from core.sheets import load_nomination_order
 from core.auction_state import auction
 from core.sheets import get_team_limits
 @app_commands.command(name="matchbid", description="Match the current highest bid (nominator only)")
@@ -251,3 +253,27 @@ async def setup(bot):
     bot.tree.add_command(startdraft)
     bot.tree.add_command(autobidstatus)
     bot.tree.add_command(cancelautobid)
+
+
+nomination_queue = deque()
+
+@app_commands.command(name="startdraft", description="Start the live draft session")
+async def startdraft(interaction: discord.Interaction):
+    auction.draft_started = True
+    auction.channel = interaction.channel
+    auction.reset()
+
+    global nomination_queue
+    nomination_queue.clear()
+
+    try:
+        teams = load_nomination_order()
+        for team in teams:
+            if team["owner_id"]:
+                nomination_queue.append((team["owner_id"], team["team_name"]))
+            elif team["gm_id"]:
+                nomination_queue.append((team["gm_id"], team["team_name"]))
+        auction.nomination_queue = list(nomination_queue)
+        await interaction.response.send_message("🚨 Draft started! First team may now nominate.")
+    except Exception as e:
+        await interaction.response.send_message(f"❌ Failed to load queue: {e}", ephemeral=True)
