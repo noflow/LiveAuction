@@ -4,7 +4,8 @@ from .socketio_instance import socketio
 
 @socketio.on("connect")
 def on_connect():
-    discord_id = session.get("discord_id")
+    print("🔌 WebSocket connected")
+    print("📦 Session:", dict(session))  # Log Discord ID
     sid = request.sid
 
     if not discord_id:
