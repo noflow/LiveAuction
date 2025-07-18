@@ -1,3 +1,4 @@
+from flask_session import Session  # ✅ NEW
 from flask import Flask, request, jsonify, redirect, session
 import asyncio, os, time, requests
 from flask_cors import CORS
@@ -6,9 +7,11 @@ from core.socketio_instance import socketio
 
 
 app = Flask(__name__)
-socketio.init_app(app, cors_allowed_origins="*")  # ✅ This line is critical
-CORS(app)
 app.secret_key = os.getenv("SESSION_SECRET", "defaultsecret")
+app.config["SESSION_TYPE"] = "filesystem"  # ✅ REQUIRED for WebSocket session support
+Session(app)                               # ✅ Attach Flask-Session
+socketio.init_app(app, cors_allowed_origins="*")  # ✅ Must come after Session(app)
+CORS(app)
 
 DISCORD_CLIENT_ID = os.getenv("DISCORD_CLIENT_ID")
 DISCORD_CLIENT_SECRET = os.getenv("DISCORD_CLIENT_SECRET")
