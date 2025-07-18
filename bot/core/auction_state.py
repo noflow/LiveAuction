@@ -54,3 +54,11 @@ async def auction_countdown():
     auction.channel = None
     auction.nominator = None
     auction.auto_bidders.clear()
+
+
+    nomination_index = 0
+    nomination_queue = []
+
+    def advance_nomination_queue(self):
+        self.nomination_index = (self.nomination_index + 1) % len(self.nomination_queue)
+        return self.nomination_queue[self.nomination_index]

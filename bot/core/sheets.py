@@ -92,3 +92,27 @@ def get_team_limits(discord_id):
         print(f"[Error] Google Sheets access failed: {e}")
         return None
 
+
+
+def load_nomination_order():
+    scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
+    creds = ServiceAccountCredentials.from_json_keyfile_name("google_credentials.json", scope)
+    client = gspread.authorize(creds)
+    sheet = client.open_by_key("1QeLyKIgTSYFkLUqPcUrKyJBqTIo8WZoL-BI6tmqWcHk")
+    worksheet = sheet.worksheet("Team List")
+    rows = worksheet.get_all_records()
+
+    teams = []
+    for row in rows:
+        team_name = row.get("Team Name", "").strip()
+        owner_id = row.get("Owner Discord ID", "").strip()
+        gm_id = row.get("GM Discord ID", "").strip()
+        if not team_name:
+            continue
+        teams.append({
+            "team_name": team_name,
+            "owner_id": owner_id,
+            "gm_id": gm_id
+        })
+
+    return teams
