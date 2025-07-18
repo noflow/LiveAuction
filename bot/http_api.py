@@ -187,3 +187,14 @@ def start_draft_proxy():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+def send_team_update(discord_id, sid):
+    from .sheets import get_team_data_for_user
+
+    team_data = get_team_data_for_user(discord_id)
+    if not team_data:
+        print(f"[team:update] No matching team for Discord ID {discord_id}")
+        return
+
+    team_data["isGMOrOwner"] = True
+    socketio.emit("team:update", team_data, room=sid)
+    print(f"[team:update] Sent to {discord_id} (SID: {sid}) → {team_data['teamName']}")
