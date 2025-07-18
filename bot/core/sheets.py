@@ -144,3 +144,18 @@ def get_team_roster(team_name):
     except Exception as e:
         print(f"[Error] get_team_roster: {e}")
         return []
+
+def load_nomination_order():
+    try:
+        creds = ServiceAccountCredentials.from_json_keyfile_name("google_credentials.json", [
+            "https://spreadsheets.google.com/feeds",
+            "https://www.googleapis.com/auth/drive",
+        ])
+        client = gspread.authorize(creds)
+        sheet = client.open_by_key("1QeLyKIgTSYFkLUqPcUrKyJBqTIo8WZoL-BI6tmqWcHk")
+        worksheet = sheet.worksheet("Team List")
+        values = worksheet.col_values(1)[1:]  # skip header
+        return [team.strip() for team in values if team.strip()]
+    except Exception as e:
+        print(f"[ERROR] Failed to load nomination order: {e}")
+        return []
