@@ -5,7 +5,6 @@ from .socketio_instance import socketio
 @socketio.on("connect")
 def on_connect():
     print("🔌 WebSocket connected")
-    print("📦 Session:", dict(session))
 
     discord_id = session.get("discord_id")  # ✅ Define this first
     sid = request.sid
