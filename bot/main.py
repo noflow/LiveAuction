@@ -20,10 +20,13 @@ from core.socketio_instance import socketio
 from http_api import app
 
 def run_flask_socket():
-    socketio.run(app, host="0.0.0.0", port=5050, allow_unsafe_werkzeug=True)
+    try:
+        socketio.run(app, host="0.0.0.0", port=5050, allow_unsafe_werkzeug=True)
+    except Exception as e:
+        print(f"[ERROR] Flask server failed to start: {e}")
 
 # start Flask+SocketIO in background
-threading.Thread(target=run_flask_socket, daemon=True).start()
+threading.Thread(target=run_flask_socket, name="FlaskSocketThread", daemon=True).start()
 
 # ✅ Load environment variables
 load_dotenv()
