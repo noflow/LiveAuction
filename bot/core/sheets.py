@@ -145,41 +145,6 @@ def get_team_roster(team_name):
         print(f"[Error] get_team_roster: {e}")
         return []
 
-def get_team_data_for_user(discord_id):
-    try:
-        scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
-        creds = ServiceAccountCredentials.from_json_keyfile_name("google_credentials.json", scope)
-        client = gspread.authorize(creds)
-        sheet = client.open_by_key("1QeLyKIgTSYFkLUqPcUrKyJBqTIo8WZoL-BI6tmqWcHk")
-        settings = sheet.worksheet("Settings")
-        records = settings.get_all_records()
-
-        for row in records:
-            if str(row.get("Owner Discord ID")) == str(discord_id) or str(row.get("GM Discord ID")) == str(discord_id):
-                team_name = row.get("Team Name")
-                salary = float(row.get("Salary", 0))
-                used = float(row.get("Salary Used", 0))
-                roster = int(row.get("Roster Count", 0))
-
-                from core.sheets import get_team_roster
-                players = get_team_roster(team_name)
-
-                role = "Owner" if str(row.get("Owner Discord ID")) == str(discord_id) else "GM"
-
-                return {
-                    "teamName": team_name,
-                    "salaryRemaining": salary - used,
-                    "rosterCount": roster,
-                    "players": players,
-                    "role": role
-                }
-
-        return None
-    except Exception as e:
-        print(f"[Error] get_team_data_for_user: {e}")
-        return None
-
-
 def load_nomination_order():
     try:
         creds = ServiceAccountCredentials.from_json_keyfile_name("google_credentials.json", [
@@ -194,3 +159,37 @@ def load_nomination_order():
     except Exception as e:
         print(f"[ERROR] Failed to load nomination order: {e}")
         return []
+
+
+def get_team_data_for_user_by_username(username):
+    try:
+        scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
+        creds = ServiceAccountCredentials.from_json_keyfile_name("google_credentials.json", scope)
+        client = gspread.authorize(creds)
+        sheet = client.open_by_key("1QeLyKIgTSYFkLUqPcUrKyJBqTIo8WZoL-BI6tmqWcHk")
+        settings = sheet.worksheet("Settings")
+        records = settings.get_all_records()
+
+        for row in records:
+            if row.get("Owner") == username or row.get("GM") == username:
+                team_name = row.get("Team Name")
+                salary = float(row.get("Salary", 0))
+                used = float(row.get("Salary Used", 0))
+                roster = int(row.get("Roster Count", 0))
+
+                players = get_team_roster(team_name)
+
+                role = "Owner" if row.get("Owner") == username else "GM"
+
+                return {
+                    "teamName": team_name,
+                    "salaryRemaining": salary - used,
+                    "rosterCount": roster,
+                    "players": players,
+                    "role": role
+                }
+
+        return None
+    except Exception as e:
+        print(f"[Error] get_team_data_for_user_by_username: {e}")
+        return None
