@@ -6,6 +6,8 @@ from core.auction_state import auction
 from core.sheets import get_team_limits, get_team_roster
 from core.socketio_instance import socketio
 from commands.autobid_utils import check_auto_bidders  # ✅ avoids circular import
+from core.events import connected_users
+
 
 LOG_CHANNEL_ID = 999999999999999999  # Replace with real channel ID
 
@@ -134,15 +136,22 @@ async def emit_team_update(user_id):
     limits = get_team_limits(user_id)
     if not limits:
         return
+
     players = get_team_roster(limits["team"])
-    socketio.emit("team:update", {
+    payload = {
         "teamName": limits["team"],
         "salaryRemaining": limits["remaining"],
         "rosterCount": limits["roster_count"],
         "maxRoster": get_setting("max_roster_size"),
         "players": [{"name": p["name"], "cost": p["amount"]} for p in players],
         "isGMOrOwner": True
-    })
+    }
+
+    sid = connected_users.get(str(user_id))
+    if sid:
+        emit("team:update", payload, room=sid)
+    else:
+        emit("team:update", payload)
 
 
 async def setup(bot):

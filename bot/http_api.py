@@ -4,6 +4,7 @@ import asyncio, os, time, requests
 from flask_cors import CORS
 from commands.nominate import handle_nomination_from_backend
 from core.socketio_instance import socketio
+from core.sheets import get_team_data_for_user, get_team_role_id 
 
 
 app = Flask(__name__)
@@ -202,3 +203,20 @@ def send_team_update(discord_id, sid):
     team_data["isGMOrOwner"] = True
     socketio.emit("team:update", team_data, room=sid)
     print(f"[team:update] Sent to {discord_id} (SID: {sid}) → {team_data['teamName']}")
+
+
+@app.route("/api/team", methods=["GET"])
+def get_team_data():
+    if "discord_id" not in session:
+        return jsonify({ "error": "Not logged in" }), 401
+
+    team_data = get_team_data_for_user(session["discord_id"])
+    if not team_data:
+        return jsonify({ "error": "No team found for user" }), 404
+
+    team_data["isGMOrOwner"] = True
+    team_data["username"] = session.get("username", "Unknown")
+    team_data["role_id"] = get_team_role_id(team_data["teamName"])  # ⬅️ Add role ID
+
+    return jsonify(team_data)
+

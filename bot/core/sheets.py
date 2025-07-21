@@ -1,5 +1,11 @@
+import os
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
+
+
+def get_team_role_id(team_name):
+    return os.getenv(team_name.upper().replace(" ", "_"))
+
 
 def update_team_after_win(discord_id, bid_amount):
     try:
