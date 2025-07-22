@@ -221,7 +221,6 @@ def get_team_data():
     return jsonify(team_data)
 
 
-
 from core.sheets import load_draft_list
 
 @app.route("/api/draft-list", methods=["GET"])
