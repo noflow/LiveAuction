@@ -229,3 +229,7 @@ def get_draft_list():
         return jsonify(load_draft_list())
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@app.route("/debug")
+def debug():
+    return jsonify({"status": "✅ Flask is running", "version": "1.0"})
