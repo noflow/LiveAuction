@@ -1,6 +1,11 @@
 import os
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
+import json
+
+creds = json.loads(os.environ["GOOGLE_CREDENTIALS_JSON"])
+client = gspread.authorize(ServiceAccountCredentials.from_json_keyfile_dict(creds, scope))
+
 
 
 def get_team_role_id(team_name):
