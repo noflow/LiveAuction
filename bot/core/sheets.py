@@ -5,7 +5,7 @@ import gspread
 # === Google Sheets Setup ===
 
 scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
-json_creds = os.environ.get('GOOGLE_CREDENTIALS_JSON')
+json_creds = os.environ.get('GOOGLE_CREDENTIALS')
 parsed = json.loads(json.loads(json_creds))  # double parse
 credentials = ServiceAccountCredentials.from_json_keyfile_dict(parsed, scope)
 client = gspread.authorize(credentials)
