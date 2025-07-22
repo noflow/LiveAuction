@@ -1,20 +1,18 @@
-import json, os
-from oauth2client.service_account import ServiceAccountCredentials
+import os
 import gspread
+from oauth2client.service_account import ServiceAccountCredentials
 
-# === Google Sheets Setup ===
 
-scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
-json_creds = os.environ.get('GOOGLE_CREDENTIALS')
-parsed = json.loads(json.loads(json_creds))  # double parse
-credentials = ServiceAccountCredentials.from_json_keyfile_dict(parsed, scope)
-client = gspread.authorize(credentials)
+def get_team_role_id(team_name):
+    return os.getenv(team_name.upper().replace(" ", "_"))
 
-SHEET_ID = "1QeLyKIgTSYFkLUqPcUrKyJBqTIo8WZoL-BI6tmqWcHk"
 
 def update_team_after_win(discord_id, bid_amount):
     try:
-        sheet = client.open_by_key(SHEET_ID)
+        scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
+        creds = ServiceAccountCredentials.from_json_keyfile_name("google_credentials.json", scope)
+        client = gspread.authorize(creds)
+        sheet = client.open_by_key("1QeLyKIgTSYFkLUqPcUrKyJBqTIo8WZoL-BI6tmqWcHk")
         settings = sheet.worksheet("Settings")
         data = settings.get_all_records()
 
@@ -35,7 +33,10 @@ def update_team_after_win(discord_id, bid_amount):
 
 def append_player_to_team_tab(team_name, player_name, amount):
     try:
-        sheet = client.open_by_key(SHEET_ID)
+        scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
+        creds = ServiceAccountCredentials.from_json_keyfile_name("google_credentials.json", scope)
+        client = gspread.authorize(creds)
+        sheet = client.open_by_key("1QeLyKIgTSYFkLUqPcUrKyJBqTIo8WZoL-BI6tmqWcHk")
         team_sheet = sheet.worksheet("Team")
 
         all_values = team_sheet.get_all_values()
@@ -53,7 +54,10 @@ def append_player_to_team_tab(team_name, player_name, amount):
 
 def remove_player_from_draft(player_name):
     try:
-        sheet = client.open_by_key(SHEET_ID)
+        scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
+        creds = ServiceAccountCredentials.from_json_keyfile_name("google_credentials.json", scope)
+        client = gspread.authorize(creds)
+        sheet = client.open_by_key("1QeLyKIgTSYFkLUqPcUrKyJBqTIo8WZoL-BI6tmqWcHk")
         draft_sheet = sheet.worksheet("Draft")
         values = draft_sheet.get_all_values()
 
@@ -64,9 +68,16 @@ def remove_player_from_draft(player_name):
     except Exception as e:
         print(f"[Error] remove_player_from_draft: {e}")
 
+# === Google Sheets Setup ===
+
+
 def get_team_limits(discord_id):
     try:
-        sheet = client.open_by_key(SHEET_ID)
+        scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
+        creds_path = "google_credentials.json"
+        creds = ServiceAccountCredentials.from_json_keyfile_name(creds_path, scope)
+        client = gspread.authorize(creds)
+        sheet = client.open_by_key("1QeLyKIgTSYFkLUqPcUrKyJBqTIo8WZoL-BI6tmqWcHk")
         settings = sheet.worksheet("Settings")
         records = settings.get_all_records()
 
@@ -84,25 +95,108 @@ def get_team_limits(discord_id):
                 }
         return None
     except Exception as e:
-        print(f"[Error] get_team_limits: {e}")
+        print(f"[Error] Google Sheets access failed: {e}")
         return None
 
 
-def get_sheet():
-    return client.open_by_key(SHEET_ID)
 
 def load_draft_list():
-    sheet = get_sheet().worksheet("Draft List")
-    data = sheet.get_all_records()
-    result = []
-    for row in data:
-        result.append({
-            "id": row.get("PSN / XBL ID", "").strip(),
-            "position": row.get("Main Position", "").strip() + ("/" + row["Other Positions"].strip() if row.get("Other Positions") else ""),
-            "hand": row.get("Hand", "").strip()
-        })
-    return result
+    scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
+    creds = ServiceAccountCredentials.from_json_keyfile_name("google_credentials.json", scope)
+    client = gspread.authorize(creds)
+    sheet = client.open_by_key("1QeLyKIgTSYFkLUqPcUrKyJBqTIo8WZoL-BI6tmqWcHk")
+    worksheet = sheet.worksheet("Draft List")
+    rows = worksheet.get_all_records()
 
-def load_team_list():
-    sheet = get_sheet().worksheet("Team List")
-    return sheet.get_all_records()
+    players = []
+    for row in rows:
+        name = row.get("PSN / XBL ID", "").strip()
+        main = row.get("Main Position", "").strip()
+        other = row.get("Other Positions", "").strip()
+        hand = row.get("Hand", "").strip()
+
+        if not name:
+            continue
+
+        position = f"{main}/{other}" if other else main
+        players.append({
+            "id": name,
+            "position": position,
+            "hand": hand
+        })
+
+    return players
+
+
+def get_team_roster(team_name):
+    try:
+        scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
+        creds = ServiceAccountCredentials.from_json_keyfile_name("google_credentials.json", scope)
+        client = gspread.authorize(creds)
+        sheet = client.open_by_key("1QeLyKIgTSYFkLUqPcUrKyJBqTIo8WZoL-BI6tmqWcHk")
+        team_sheet = sheet.worksheet("Team")
+        values = team_sheet.get_all_values()
+
+        players = []
+        for row in values:
+            if len(row) >= 2 and row[0].strip() == team_name:
+                player_name = row[1].strip()
+                try:
+                    amount = float(row[2].replace("$", "").strip())
+                except:
+                    amount = 0
+                players.append({"name": player_name, "amount": amount})
+        return players
+    except Exception as e:
+        print(f"[Error] get_team_roster: {e}")
+        return []
+
+def get_team_data_for_user(discord_id):
+    try:
+        scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
+        creds = ServiceAccountCredentials.from_json_keyfile_name("google_credentials.json", scope)
+        client = gspread.authorize(creds)
+        sheet = client.open_by_key("1QeLyKIgTSYFkLUqPcUrKyJBqTIo8WZoL-BI6tmqWcHk")
+        settings = sheet.worksheet("Settings")
+        records = settings.get_all_records()
+
+        for row in records:
+            if str(row.get("Owner Discord ID")) == str(discord_id) or str(row.get("GM Discord ID")) == str(discord_id):
+                team_name = row.get("Team Name")
+                salary = float(row.get("Salary", 0))
+                used = float(row.get("Salary Used", 0))
+                roster = int(row.get("Roster Count", 0))
+
+                from core.sheets import get_team_roster
+                players = get_team_roster(team_name)
+
+                role = "Owner" if str(row.get("Owner Discord ID")) == str(discord_id) else "GM"
+
+                return {
+                    "teamName": team_name,
+                    "salaryRemaining": salary - used,
+                    "rosterCount": roster,
+                    "players": players,
+                    "role": role
+                }
+
+        return None
+    except Exception as e:
+        print(f"[Error] get_team_data_for_user: {e}")
+        return None
+
+
+def load_nomination_order():
+    try:
+        creds = ServiceAccountCredentials.from_json_keyfile_name("google_credentials.json", [
+            "https://spreadsheets.google.com/feeds",
+            "https://www.googleapis.com/auth/drive",
+        ])
+        client = gspread.authorize(creds)
+        sheet = client.open_by_key("1QeLyKIgTSYFkLUqPcUrKyJBqTIo8WZoL-BI6tmqWcHk")
+        worksheet = sheet.worksheet("Team List")
+        values = worksheet.col_values(1)[1:]  # skip header
+        return [team.strip() for team in values if team.strip()]
+    except Exception as e:
+        print(f"[ERROR] Failed to load nomination order: {e}")
+        return []
