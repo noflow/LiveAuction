@@ -44,7 +44,7 @@ async def nominate(interaction: discord.Interaction, player: str):
 async def handle_nomination_from_backend(data):
     from core.auction_state import auction, auction_countdown
     from core.sheets import get_team_limits
-    from core.settings import get_setting
+    from settings import get_setting
     from commands.bidding import check_auto_bidders
 
     class DummyUser:
