@@ -205,7 +205,7 @@ def send_team_update(discord_id, sid):
     print(f"[team:update] Sent to {discord_id} (SID: {sid}) → {team_data['teamName']}")
 
 
-@app.route("/api/team", methods=["GET"])
+@app.route("/team", methods=["GET"])
 def get_team_data():
     if "discord_id" not in session:
         return jsonify({ "error": "Not logged in" }), 401
@@ -223,7 +223,7 @@ def get_team_data():
 
 from core.sheets import load_draft_list
 
-@app.route("/api/draft-list", methods=["GET"])
+@app.route("/draft-list", methods=["GET"])
 def get_draft_list():
     try:
         return jsonify(load_draft_list())
