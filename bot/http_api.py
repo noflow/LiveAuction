@@ -223,13 +223,17 @@ def get_team_data():
 
 from core.sheets import load_draft_list
 
-@app.route("/draft-list", methods=["GET"])
-def get_draft_list():
-    try:
-        return jsonify(load_draft_list())
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+#@app.route("/draft-list", methods=["GET"])
+#def get_draft_list():
+    #try:
+        #return jsonify(load_draft_list())
+   # except Exception as e:
+        #return jsonify({"error": str(e)}), 500
 
 @app.route("/debug")
 def debug():
     return jsonify({"status": "✅ Flask is running", "version": "1.0"})
+
+@app.route("/draft-list")
+def test_draft():
+    return {"status": "draft list route working!"}
