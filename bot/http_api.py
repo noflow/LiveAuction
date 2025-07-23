@@ -234,7 +234,9 @@ from core.sheets import load_draft_list
 def debug():
     return jsonify({"status": "✅ Flask is running", "version": "1.0"})
 
-@app.route("/draft-list")
-def draft_list():
-    return jsonify({"status": "✅ draft-list endpoint is working!"})
-
+@app.route("/draft-list", methods=["GET"])
+def get_draft_list():
+    try:
+        return jsonify(load_draft_list())
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
