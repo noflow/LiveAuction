@@ -85,9 +85,12 @@ def get_me():
 def nominate():
     try:
         data = request.json
+        print("📥 /nominate received:", data)  # ✅ Log payload
         asyncio.run(handle_nomination_from_backend(data))
         return jsonify({"status": "success"}), 200
     except Exception as e:
+        import traceback
+        print("[/nominate ERROR]", traceback.format_exc())  # ✅ Full traceback
         return jsonify({"status": "error", "message": str(e)}), 500
 
 @app.route("/force-nominate", methods=["POST"])
