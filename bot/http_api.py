@@ -235,5 +235,6 @@ def debug():
     return jsonify({"status": "✅ Flask is running", "version": "1.0"})
 
 @app.route("/draft-list")
-def test_draft():
-    return {"status": "draft list route working!"}
+def draft_list():
+    return jsonify({"status": "✅ draft-list endpoint is working!"})
+
