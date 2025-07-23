@@ -20,6 +20,7 @@ class AuctionState:
         self.nomination_queue = []
         self.nomination_index = 0
         self.bid_history = []
+        self.paused = False 
 
     def reset_timer(self):
         self.ends_at = time.time() + 10
