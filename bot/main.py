@@ -15,7 +15,6 @@ from core.sheets import (
     get_team_limits,
 )
 from commands import bidding, control, nominate
-from http_api import start_flask_server
 from core.socketio_instance import socketio
 from http_api import app
 
