@@ -5,8 +5,6 @@ from flask_cors import CORS
 from commands.nominate import handle_nomination_from_backend
 from core.socketio_instance import socketio
 from core.sheets import get_team_data_for_user, get_team_role_id 
-import json
-from core.sheets import load_draft_list
 
 
 app = Flask(__name__)
@@ -212,26 +210,23 @@ def send_team_update(discord_id, sid):
 
 @app.route("/team", methods=["GET"])
 def get_team_data():
-    raw_cookie = request.cookies.get("user")
-    if not raw_cookie:
-        return jsonify({"error": "No user cookie"}), 401
+    if "username" not in session:
+        return jsonify({ "error": "Not logged in" }), 401
 
-    try:
-        user = json.loads(raw_cookie)
-        username = user.get("username")
-        if not username:
-            return jsonify({"error": "Missing username in cookie"}), 400
+    team_data = get_team_data_for_user(session["username"])
+    if not team_data:
+        return jsonify({ "error": "No team found for user" }), 404
 
-        team_data = get_team_data_for_user(username)
-        if not team_data:
-            return jsonify({"error": "No team found for user"}), 404
+    team_data["isGMOrOwner"] = True
+    team_data["username"] = session["username"]
+    team_data["role_id"] = get_team_role_id(team_data["teamName"])
 
-        team_data["isGMOrOwner"] = True
-        team_data["username"] = username
-        return jsonify(team_data)
-    except Exception as e:
-        return jsonify({"error": "Invalid cookie", "detail": str(e)}), 400
+    return jsonify(team_data)
 
+
+from core.sheets import load_draft_list
+from settings import get_setting, save_settings
+from core.sheets import get_team_limits, get_draft_list, load_nomination_order
 
 @app.route("/debug")
 def debug():
@@ -243,3 +238,118 @@ def get_draft_list():
         return jsonify(load_draft_list())
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+# ---------- session helper ----------
+def _current_user():
+    if 'discord_id' not in session:
+        return None
+    return {
+        "id": int(session['discord_id']),
+        "username": session.get('username','unknown'),
+        "roles": session.get('roles', [])
+    }
+
+
+class _DummyUser:
+    def __init__(self, uid, username):
+        self.id = uid
+        self.display_name = username
+        self.mention = f"<@{uid}>"
+
+
+# ----- API aliases -----
+def _alias(path, endpoint, methods):
+    app.add_url_rule(f"/api{path}", endpoint.__name__+"_api", endpoint, methods=methods)
+
+for rule in list(app.url_map.iter_rules()):
+    if not rule.rule.startswith("/api"):
+        methods = list(rule.methods - {'HEAD','OPTIONS'})
+        _alias(rule.rule, app.view_functions[rule.endpoint], methods)
+
+
+# ---------- nominate ----------
+@app.route("/api/nominate", methods=["POST"])
+def api_nominate():
+    from commands.nominate import handle_nomination_from_backend
+    u=_current_user()
+    if not u:
+        return {"status":"error","message":"Not authenticated"},401
+    data=request.get_json(force=True) or {}
+    player=data.get("player")
+    if not player:
+        return {"status":"error","message":"Missing 'player'"},400
+    res=asyncio.run(handle_nomination_from_backend({"userId":u['id'],"username":u['username'],"player":player}))
+    code=200 if res.get("status")=="success" else 400
+    return res,code
+
+
+# ---------- bid ----------
+@app.route("/api/bid", methods=["POST"])
+def api_bid():
+    u=_current_user()
+    if not u:
+        return {"status":"error","message":"Not authenticated"},401
+    data=request.get_json(force=True) or {}
+    btype=data.get("type")
+    amt=data.get("amount")
+    if not btype:
+        return {"status":"error","message":"Missing 'type'"},400
+    # simplistic bid logic
+    cur = auction.highest_bid
+    inc = get_setting("minimumBidIncrement") or 1
+    if btype=="min":
+        amt = cur + inc
+    elif btype=="flash":
+        if amt is None or int(amt)<cur+inc:
+            return {"status":"error","message":"Bid too low"},400
+        amt=int(amt)
+    elif btype=="match":
+        amt = cur
+    else:
+        return {"status":"error","message":"Unknown bid type"},400
+    auction.highest_bid = amt
+    auction.highest_bidder = _DummyUser(u['id'], u['username'])
+    auction.bid_history.append({"team":u['username'],"amount":amt,"player":auction.active_player,"ts":time.time()})
+    socketio.emit("bid:update", {"team":u['username'],"amount":amt})
+    socketio.emit("bid:high", {"team":u['username'],"amount":amt})
+    # reset timer
+    remaining=int(auction.ends_at-time.time()) if auction.ends_at else 0
+    if remaining<= (get_setting("reset_clock") or 10):
+        auction.reset_timer()
+    return {"status":"success","amount":amt}
+
+
+@app.route("/api/autobid", methods=["POST"])
+def api_autobid():
+    u=_current_user()
+    if not u:
+        return {"status":"error","message":"Not authenticated"},401
+    data=request.get_json(force=True) or {}
+    max_bid=data.get("maxBid")
+    if max_bid is None:
+        return {"status":"error","message":"Missing maxBid"},400
+    auction.auto_bidders[u['id']] = int(max_bid)
+    return {"status":"success","maxBid":int(max_bid)}
+
+
+@app.route("/api/team-info", methods=["GET"])
+def api_team_info():
+    u=_current_user()
+    if not u:
+        return {"status":"error","message":"Not authenticated"},401
+    limits = get_team_limits(u['id'])
+    if not limits:
+        return {"status":"error","message":"Team not found"},404
+    return {"status":"success","data":limits}
+
+
+@app.route("/api/pass", methods=["POST"])
+def api_pass():
+    u=_current_user()
+    if not u:
+        return {"status":"error","message":"Not authenticated"},401
+    if hasattr(auction,'advance_nomination_queue'):
+        nxt = auction.advance_nomination_queue()
+        socketio.emit("draft:log", f"⏭️ {u['username']} passed. Next: {nxt}")
+        return {"status":"success","next":nxt}
+    return {"status":"error","message":"Queue function missing"},500
