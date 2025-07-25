@@ -7,6 +7,7 @@ from core.socketio_instance import socketio
 from core.sheets import get_team_data_for_user, get_team_role_id 
 
 
+
 app = Flask(__name__)
 app.secret_key = os.getenv("SESSION_SECRET", "defaultsecret")
 app.config["SESSION_TYPE"] = "filesystem"  # ✅ REQUIRED for WebSocket session support
@@ -226,7 +227,7 @@ def get_team_data():
 
 from core.sheets import load_draft_list
 from settings import get_setting, update_setting as save_settings
-from core.sheets import get_team_limits, get_draft_list, load_nomination_order
+from core.sheets import get_team_limits, load_draft_list as get_draft_list, load_nomination_order
 
 @app.route("/debug")
 def debug():
