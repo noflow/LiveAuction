@@ -225,7 +225,7 @@ def get_team_data():
 
 
 from core.sheets import load_draft_list
-from settings import get_setting, save_settings
+from settings import get_setting, update_setting as save_settings
 from core.sheets import get_team_limits, get_draft_list, load_nomination_order
 
 @app.route("/debug")
