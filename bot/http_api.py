@@ -211,6 +211,7 @@ def send_team_update(discord_id, sid):
 
 @app.route("/team")
 def get_team():
+    print("SESSION DATA:", dict(session))  # ✅ Debug
     username = session.get("discord_username")
     if not username:
         return jsonify({"error": "Unauthorized"}), 401
@@ -350,3 +351,4 @@ def api_pass():
         socketio.emit("draft:log", f"⏭️ {u['username']} passed. Next: {nxt}")
         return {"status":"success","next":nxt}
     return {"status":"error","message":"Queue function missing"},500
+
