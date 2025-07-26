@@ -209,20 +209,21 @@ def send_team_update(discord_id, sid):
     print(f"[team:update] Sent to {discord_id} (SID: {sid}) → {team_data['teamName']}")
 
 
-@app.route("/team", methods=["GET"])
-def get_team_data():
-    if "username" not in session:
-        return jsonify({ "error": "Not logged in" }), 401
+@app.route("/api/team")
+def get_team_for_user():
+    username = session.get("discord_username")
+    roles = session.get("discord_roles", [])
 
-    team_data = get_team_data_for_user(session["username"])
-    if not team_data:
-        return jsonify({ "error": "No team found for user" }), 404
+    if not username or not roles:
+        return jsonify({"error": "Not authenticated"}), 401
 
-    team_data["isGMOrOwner"] = True
-    team_data["username"] = session["username"]
-    team_data["role_id"] = get_team_role_id(team_data["teamName"])
-
-    return jsonify(team_data)
+    try:
+        team_data = get_team_data_for_user(username, roles)
+        if not team_data:
+            return jsonify({"error": "Team not found"}), 404
+        return jsonify(team_data)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 from core.sheets import load_draft_list
