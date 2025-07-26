@@ -186,7 +186,7 @@ def get_bid_history():
     from core.auction_state import auction
     return jsonify(auction.bid_history[-50:])
 
-@app.route("/api/admin/start-draft", methods=["POST"])
+@app.route("/admin/start-draft", methods=["POST"])
 def start_draft_proxy():
     try:
         res = requests.post("http://bot.wcahockey.com/startdraft")  # 🔁 adjust URL if needed
@@ -209,7 +209,7 @@ def send_team_update(discord_id, sid):
     print(f"[team:update] Sent to {discord_id} (SID: {sid}) → {team_data['teamName']}")
 
 
-@app.route("/api/team")
+@app.route("/team")
 def get_team():
     username = session.get("discord_username")
     if not username:
