@@ -139,33 +139,35 @@ def get_team_roster(team_name):
         return []
 
 
-def get_team_data_for_user(discord_id):
+def get_team_data_for_user(username):
     try:
         sheet = client.open_by_key("1QeLyKIgTSYFkLUqPcUrKyJBqTIo8WZoL-BI6tmqWcHk")
         settings = sheet.worksheet("Settings")
         records = settings.get_all_records()
 
         for row in records:
-            if str(row.get("Owner Discord ID")) == str(discord_id) or str(row.get("GM Discord ID")) == str(discord_id):
+            owner = str(row.get("Owner Discord ID", "")).strip().lower()
+            gm = str(row.get("GM Discord ID", "")).strip().lower()
+
+            if username.lower() == owner or username.lower() == gm:
                 team_name = row.get("Team Name")
-                salary = float(row.get("Salary", 0))
-                used = float(row.get("Salary Used", 0))
-                roster = int(row.get("Roster Count", 0))
+                salary_remaining = float(row.get("Salary Remaining", 0))
+                roster_count = int(row.get("Roster Count", 0))
+                role = "Owner" if username.lower() == owner else "GM"
 
                 players = get_team_roster(team_name)
-                role = "Owner" if str(row.get("Owner Discord ID")) == str(discord_id) else "GM"
 
                 return {
                     "teamName": team_name,
-                    "salaryRemaining": salary - used,
-                    "rosterCount": roster,
+                    "salaryRemaining": salary_remaining,
+                    "rosterCount": roster_count,
                     "players": players,
                     "role": role
                 }
 
         return None
     except Exception as e:
-        print(f"[Error] get_team_data_for_user: {e}")
+        print(f"[ERROR] get_team_data_for_user: {e}")
         return None
 
 
