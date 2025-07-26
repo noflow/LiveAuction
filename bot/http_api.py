@@ -210,21 +210,16 @@ def send_team_update(discord_id, sid):
 
 
 @app.route("/api/team")
-def get_team_for_user():
+def get_team():
     username = session.get("discord_username")
-    roles = session.get("discord_roles", [])
+    if not username:
+        return jsonify({"error": "Unauthorized"}), 401
 
-    if not username or not roles:
-        return jsonify({"error": "Not authenticated"}), 401
+    team_data = get_team_data_for_user(username)
+    if not team_data:
+        return jsonify({"error": "Team not found"}), 404
 
-    try:
-        team_data = get_team_data_for_user(username, roles)
-        if not team_data:
-            return jsonify({"error": "Team not found"}), 404
-        return jsonify(team_data)
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
+    return jsonify(team_data)
 
 from core.sheets import load_draft_list
 from settings import get_setting, update_setting as save_settings
