@@ -15,6 +15,7 @@ Session(app)                               # ✅ Attach Flask-Session
 socketio.init_app(app, cors_allowed_origins="*")  # ✅ Must come after Session(app)
 CORS(app)
 
+print("🔍 Headers received by Flask:", dict(request.headers))
 @app.before_request
 def inject_discord_session():
     if "discord_id" not in session and "x-discord-id" in request.headers:
