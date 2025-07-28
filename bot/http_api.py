@@ -219,7 +219,7 @@ def send_team_update(discord_id, sid):
 @app.route("/team")
 def get_team():
     print("SESSION DATA:", dict(session))  # ✅ Debug
-    username = session.get("discord_username")
+    username = session.get("username")
     if not username:
         return jsonify({"error": "Unauthorized"}), 401
 
