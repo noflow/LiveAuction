@@ -13,7 +13,7 @@ app.secret_key = os.getenv("SESSION_SECRET", "defaultsecret")
 app.config["SESSION_TYPE"] = "filesystem"  # ✅ REQUIRED for WebSocket session support
 Session(app)                               # ✅ Attach Flask-Session
 socketio.init_app(app, cors_allowed_origins="*")  # ✅ Must come after Session(app)
-CORS(app)
+CORS(app, supports_credentials=True, origins=["https://wcahockey.com"])
 
 @app.before_request
 def inject_discord_session():
