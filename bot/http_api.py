@@ -217,8 +217,6 @@ def send_team_update(discord_id, sid):
 
 
 @app.route("/team")
-
-@app.route("/team")
 def get_team():
     print("SESSION DATA:", dict(session))  # ✅ Debug
 
@@ -228,16 +226,6 @@ def get_team():
         return jsonify({"error": "Unauthorized"}), 401
 
     print("🔍 Resolving team for username:", username)
-
-    team_data = get_team_data_for_user(username)
-    if not team_data:
-        return jsonify({"error": "Team not found"}), 404
-
-    return jsonify(team_data)
-    print("SESSION DATA:", dict(session))  # ✅ Debug
-    username = session.get("discord_username")
-    if not username:
-        return jsonify({"error": "Unauthorized"}), 401
 
     team_data = get_team_data_for_user(username)
     if not team_data:
