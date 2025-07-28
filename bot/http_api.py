@@ -17,11 +17,11 @@ CORS(app)
 
 @app.before_request
 def inject_discord_session():
+    print("🔍 Headers received by Flask:", dict(request.headers))
     if "discord_id" not in session and "x-discord-id" in request.headers:
         session["discord_id"] = request.headers["x-discord-id"]
         session["discord_username"] = request.headers.get("x-discord-username", "unknown")
         print("🧩 Injected Discord session from headers")
-
 DISCORD_CLIENT_ID = os.getenv("DISCORD_CLIENT_ID")
 DISCORD_CLIENT_SECRET = os.getenv("DISCORD_CLIENT_SECRET")
 DISCORD_REDIRECT_URI = os.getenv("DISCORD_REDIRECT_URI")
@@ -217,7 +217,23 @@ def send_team_update(discord_id, sid):
 
 
 @app.route("/team")
+
+@app.route("/team")
 def get_team():
+    print("SESSION DATA:", dict(session))  # ✅ Debug
+
+    # ✅ Try header first, then fall back to session
+    username = request.headers.get("x-discord-username") or session.get("discord_username")
+    if not username:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    print("🔍 Resolving team for username:", username)
+
+    team_data = get_team_data_for_user(username)
+    if not team_data:
+        return jsonify({"error": "Team not found"}), 404
+
+    return jsonify(team_data)
     print("SESSION DATA:", dict(session))  # ✅ Debug
     username = session.get("discord_username")
     if not username:
