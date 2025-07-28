@@ -18,8 +18,10 @@ CORS(app)
 @app.before_request
 def inject_discord_session():
     print("🔍 Headers received by Flask:", dict(request.headers))
-    print("🧩 Injected Discord session from headers")
-
+    if "discord_id" not in session and "x-discord-id" in request.headers:
+        session["discord_id"] = request.headers["x-discord-id"]
+        session["discord_username"] = request.headers.get("x-discord-username", "unknown")
+        print("🧩 Injected Discord session from headers")
 DISCORD_CLIENT_ID = os.getenv("DISCORD_CLIENT_ID")
 DISCORD_CLIENT_SECRET = os.getenv("DISCORD_CLIENT_SECRET")
 DISCORD_REDIRECT_URI = os.getenv("DISCORD_REDIRECT_URI")
