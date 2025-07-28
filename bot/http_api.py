@@ -18,7 +18,7 @@ CORS(app)
 @app.before_request
 def inject_discord_session():
     print("🔍 Headers received by Flask:", dict(request.headers))
-        print("🧩 Injected Discord session from headers")
+    print("🧩 Injected Discord session from headers")
 
 DISCORD_CLIENT_ID = os.getenv("DISCORD_CLIENT_ID")
 DISCORD_CLIENT_SECRET = os.getenv("DISCORD_CLIENT_SECRET")
