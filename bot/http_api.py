@@ -13,7 +13,7 @@ app.secret_key = os.getenv("SESSION_SECRET", "defaultsecret")
 app.config["SESSION_TYPE"] = "filesystem"  # ✅ REQUIRED for WebSocket session support
 Session(app)                               # ✅ Attach Flask-Session
 socketio.init_app(app, cors_allowed_origins="*")  # ✅ Must come after Session(app)
-CORS(app, supports_credentials=True, origins=["https://wcahockey.com"])
+CORS(app)
 
 @app.before_request
 def inject_discord_session():
@@ -216,6 +216,7 @@ def send_team_update(discord_id, sid):
     print(f"[team:update] Sent to {discord_id} (SID: {sid}) → {team_data['teamName']}")
 
 
+@app.route("/team")
 @app.route("/team")
 def get_team():
     print("SESSION DATA:", dict(session))  # ✅ Debug
